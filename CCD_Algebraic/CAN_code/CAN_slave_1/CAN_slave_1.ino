@@ -1,0 +1,87 @@
+// Đây là code chinh
+
+
+#include <Arduino.h>
+#include <SPI.h>
+#include <mcp2515.h>
+#include <TimerOne.h>
+
+#define PP 6
+#define PG 7
+#define NP 8
+#define NG 9
+
+
+
+int number,number_pass=0;
+
+struct can_frame canRecieve;
+struct can_frame canSend1;
+struct can_frame canSendFeedBack1;
+
+int theta1;
+MCP2515 mcp2515(10);
+
+
+void setup() {
+
+  Serial.begin(115200);
+  SPI.begin();
+  
+  mcp2515.reset();
+  
+  mcp2515.setBitrate(CAN_1000KBPS, MCP_8MHZ);
+  
+  canSendFeedBack1.can_id = 0x10; 
+  canSendFeedBack1.can_dlc = 1;
+  mcp2515.setNormalMode();
+
+  pinMode(PP, OUTPUT);
+  pinMode(PG, OUTPUT);
+  pinMode(NP, OUTPUT);
+  pinMode(NG, OUTPUT);
+}
+
+////////////////////////////////////////////////////////////////////
+// chuyển đổi số
+////////////////////////////////////////////////////////////////////
+int convertCanDataToInt(byte D1, byte D2){
+  if(D2<100){             // số dương
+    number = D1 + D2*256;
+  }
+  else{
+    number = (-(256-D1)-(255-D2)*256);
+  }
+  return number;
+}
+////////////////////////////////////////////////////////////////////
+// feed back
+////////////////////////////////////////////////////////////////////
+void feedbackToMater(struct can_frame canSendFeedBack){
+  canSendFeedBack.data[0] = 1;
+  mcp2515.sendMessage(&canSendFeedBack);
+}
+void loop() {
+  if (mcp2515.readMessage(&canRecieve) == MCP2515::ERROR_OK) {
+      ////////////////////////////////////////////////////////////////////
+      ///////////////////////////////// NHẬN GÓC TỪ MASTER ///////////////
+      ////////////////////////////////////////////////////////////////////
+     if(canRecieve.can_id == 0x01){
+        byte data1 = canRecieve.data[0];
+        byte data2 = canRecieve.data[1];
+        theta1 = convertCanDataToInt(data1, data2);
+        feedbackToMater(canSendFeedBack1);
+     }    
+     else if(canRecieve.can_id == 0xFF){
+        byte data1 = canRecieve.data[0];
+        if(data1 == 1){
+          // Tien hanh bam xung pwm
+        }
+        else{
+          // khong bam xung pwm
+        }
+     }
+     
+   }
+ 
+}

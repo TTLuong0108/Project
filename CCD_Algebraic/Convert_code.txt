@@ -1,0 +1,8 @@
+- To convert ui-py: run cmd
+pyuic5.exe - x "path\original.ui" -o "path\converted.py"
+- Convert .qrc to py: run cmd
+pyrcc5 resources.qrc -o resources_rc.py
+- library
+pip install QT-PyQt-PySide-Custom-Widgets
+pip install PySide2
+https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer
